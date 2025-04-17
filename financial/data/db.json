@@ -1,0 +1,14 @@
+{
+  "financial": [
+    { "id": 1, "body": "foo" },
+    { "id": 2, "body": "bar" }
+  ],
+  "dashboard": [
+    { "id": 1, "body": "foo" },
+    { "id": 2, "body": "bar" }
+  ],
+  "panel": [
+    { "id": 1, "body": "baz", "postId": 1 },
+    { "id": 2, "body": "qux", "postId": 2 }
+  ]
+}

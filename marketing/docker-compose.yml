@@ -1,0 +1,6 @@
+services:
+  marketing:
+    container_name: marketing
+    image: fastapi/marketing
+    ports:
+      - "6080:80"

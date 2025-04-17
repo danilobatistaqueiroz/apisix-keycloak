@@ -1,0 +1,213 @@
+services:
+
+  apisix:
+    container_name: apisix
+    image: apache/apisix:${APISIX_IMAGE_TAG:-3.11.0-debian}
+    restart: always
+    volumes:
+      - ./apisix_conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+    depends_on:
+      - etcd
+    ##network_mode: host
+    ports:
+      - "9180:9180/tcp" #Listen for requests to Admin API.
+      - "9080:9080/tcp" #Listen for user requests.
+      - "9091:9091/tcp" #Set the port where APISIX exports metrics for Prometheus.
+      - "9443:9443/tcp" #Listen for user requests with SSL enabled.
+      - "9092:9092/tcp" #
+    networks:
+      apisix:
+
+  etcd:
+    image: bitnami/etcd:3.5.11
+    restart: always
+    volumes:
+      - etcd_data:/bitnami/etcd
+    environment:
+      ETCD_ENABLE_V2: "true"
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
+      ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
+    ports:
+      - "2379:2379/tcp"
+    networks:
+      apisix:
+
+  web1:
+    image: nginx:1.19.0-alpine
+    restart: always
+    volumes:
+      - ./upstream/web1.conf:/etc/nginx/nginx.conf
+    ports:
+      - "9081:80/tcp"
+    environment:
+      - NGINX_PORT=80
+    networks:
+      apisix:
+
+  web2:
+    image: nginx:1.19.0-alpine
+    restart: always
+    volumes:
+      - ./upstream/web2.conf:/etc/nginx/nginx.conf
+    ports:
+      - "9082:80/tcp"
+    environment:
+      - NGINX_PORT=80
+    networks:
+      apisix:
+
+  # prometheus:
+  #   image: prom/prometheus:v2.25.0
+  #   restart: always
+  #   volumes:
+  #     - ./prometheus_conf/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     apisix:
+
+  # grafana:
+  #   image: grafana/grafana:7.3.7
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - "./grafana_conf/provisioning:/etc/grafana/provisioning"
+  #     - "./grafana_conf/dashboards:/var/lib/grafana/dashboards"
+  #     - "./grafana_conf/config/grafana.ini:/etc/grafana/grafana.ini"
+  #   networks:
+  #     apisix:
+
+  # delivery:
+  #   image: delivery
+  #   container_name: delivery
+  #   build:
+  #     context: ./delivery
+  #     target: development
+  #   volumes:
+  #     - ./delivery:/usr/src/app
+  #     - /usr/src/app/node_modules
+  #   ports:
+  #     - 3001:80
+  #   command: npm run start:dev
+  #   networks:
+  #     apisix:
+
+  # panel:
+  #   container_name: panel
+  #   image: panel
+  #   build:
+  #     context: ./panel
+  #     target: development
+  #   volumes:
+  #     - ./panel:/usr/src/app
+  #     - /usr/src/app/node_modules
+  #   ports:
+  #     - 3002:80
+  #   command: npm run start:dev
+  #   networks:
+  #     apisix:
+
+  httpbin:
+    container_name: httpbin
+    image: kennethreitz/httpbin
+    ports:
+      - "5080:80"
+    networks:
+      apisix:
+
+  # financial:
+  #   image: clue/json-server
+  #   container_name: financial
+  #   volumes:
+  #     - ./financial/data/db.json:/data/db.json
+  #   ports:
+  #     - 3003:80
+  #   networks:
+  #     apisix:
+
+  # stock:
+  #   image: clue/json-server
+  #   container_name: stock
+  #   volumes:
+  #     - ./stock/data/db.json:/data/db.json
+  #   ports:
+  #     - 3004:80
+  #   networks:
+  #     apisix:
+
+  marketing:
+    image: fastapi/marketing
+    container_name: marketing
+    build:
+      context: ./marketing
+      target: development
+    ports:
+      - "6080:80"
+    networks:
+      apisix:
+
+  admin:
+    image: fastapi/admin
+    container_name: admin
+    build:
+      context: ./admin
+    ports:
+      - "6081:80"
+    networks:
+      apisix:
+
+  keycloakweb:
+    image: mykeycloak
+    restart: on-failure
+    ports:
+      - "18080:18080"
+      - "18443:18443"
+      - "19000:19000"
+    environment:
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      DB_VENDOR: postgres
+      DB_USER: root
+      DB_PASSWORD: electron
+      KC_DB_URL: "jdbc:postgresql://keycloakdb:15432/keycloak"
+      KC_DB: postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: electron
+      KC_HOSTNAME: "https://keycloakweb:18443"
+      KC_HOSTNAME_ADMIN: "https://keycloakweb:18443"
+      KEYCLOAK_FRONTEND_URL: "http://keycloakweb/auth"
+      KC_HTTP_PORT: 18080
+      KC_HTTPS_PORT: 18443
+      KC_HTTP_MANAGEMENT_PORT: 19000
+    volumes:
+      - ./keycloak/conf/keycloak.conf:/opt/keycloak/conf/keycloak.conf
+    networks:
+      keycloak-net:
+      apisix:
+
+  keycloakdb:
+    image: postgres:latest
+    restart: on-failure
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: electron
+      PGPORT: 15432
+    ports:
+      - "15432:15432"
+    volumes:
+      - ./keycloak/postgres_data:/var/lib/postgresql/data
+    networks:
+      - keycloak-net
+      
+networks:
+  apisix:
+    driver: bridge
+  keycloak-net:
+    driver: bridge
+
+volumes:
+  etcd_data:
+    driver: local

@@ -1,0 +1,60 @@
+If you have a help desk role, then you need a help desk membership policy.  
+
+scopes:  
+  create  
+  view  
+
+resources:  
+  account  
+  transaction  
+  customer  
+  settlement  
+  report  
+
+GET permission - employee  
+POST permission - admin  
+
+permissions:  
+  account-create
+  account-view  
+  bot-create  
+  bot-view  
+  report-create  
+  report-view  
+
+roles:  
+  bank_teller  
+  account_owner  
+  user  
+  admin  
+  agent   
+  
+you can create two types of permissions: Resource-Based and Scope-Based.
+
+Simply put, for Resource-Based permissions, you apply it directly to your resource.  
+For Scoped-Based permission, you apply it to your scope(s) or scope(s) and resource.  
+
+Group Based Policy.   
+Role Based Policy.  
+
+
+
+In order to grant/deny access to a resource, you need to:  
+ - Define your policies  
+ - Define your permissions  
+ - Apply your policies to your permissions  
+ - Associate your permissions to a scope or resource (or both)  
+
+
+How you go about setting all this up is entirely up to you. You could for instance:
+
+Define individual policies, and tie each policy under the appropriate permission.
+
+Better yet, define individual policies, then group all your related policies under an aggregated policy (a policy of policies) and then  
+associate that aggregated policy with the scope-based permission.  
+You could have that scoped-based permission apply to both the resource and all its associated scope.  
+
+Or, you could further break apart your permissions by leveraging the two separate types.  
+You could create permissions solely for your resources via the resource-based permission type,  
+and separately associate other permissions solely with a scope via the scope-based permission type.  
+

@@ -1,0 +1,1 @@
+curl http://127.0.0.1:9080/faq -H 'Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJzaGlwbWVudCIsImlhdCI6MTc0MzUzNDYzMSwiZXhwIjoxNzQzNTM2NDMxfQ._bmR4g8DUaBIjKydWNNDNWuGXiOB8Vf8A1O80sUamWU' -i

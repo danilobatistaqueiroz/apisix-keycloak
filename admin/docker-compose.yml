@@ -1,0 +1,8 @@
+services:
+  admin:
+    container_name: admin
+    build:
+      context: .
+    image: fastapi/admin
+    ports:
+      - "6080:80"
